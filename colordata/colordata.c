@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <sys/mman.h>
-#include <time.h>
 #include <unistd.h>
 
 #include "colordata.h"
@@ -31,18 +30,18 @@ colordata_bayer_t *colordata_bayer_create(uint32_t height,
 	return bayer->data == MAP_FAILED ? bayer = (colordata_bayer_t*)sbrk(-sizeof(colordata_bayer_t)), (colordata_bayer_t*)NULL : bayer;
 }
 
-int colordata_bayer_destroy(colordata_bayer_t *bayer)
+int colordata_bayer_destroy(colordata_bayer_t **bayer)
 {
-	if(!bayer &&
-	   (!bayer->data ||
-	   !bayer->height ||
-	   !bayer->width)) {
+	if(!*bayer &&
+	   (!(*bayer)->data ||
+	   !(*bayer)->height ||
+	   !(*bayer)->width)) {
 		return -1;
 	}
-	if(munmap((void*)bayer->data, (size_t)(bayer->height * bayer->width) * sizeof(uint16_t))) {
+	if(munmap((void*)(*bayer)->data, (size_t)((*bayer)->height * (*bayer)->width) * sizeof(uint16_t))) {
 		return -1;
 	}
-	bayer = (colordata_bayer_t*)sbrk(-sizeof(colordata_bayer_t));
+	*bayer = (colordata_bayer_t*)sbrk(-sizeof(colordata_bayer_t));
 	return 0;
 }
 

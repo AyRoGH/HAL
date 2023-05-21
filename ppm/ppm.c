@@ -7,6 +7,27 @@
 #include "../colordata/colordata.h"
 #include "ppm.h"
 
+static int bayer_read_hdlr(colordata_bayer_t **bayer,
+                           uint8_t            *read_data,
+                           uint32_t            height,
+                           uint32_t            width)
+{
+	*bayer = colordata.bayer.create(height, width, -1);
+	if(!*bayer) {
+		return -1;
+	}
+	printf(" => %d %d\n", (*bayer)->height, (*bayer)->width);
+	for(size_t x = 0; x < (*bayer)->height; x++) {
+		for(size_t y = 0; y < (*bayer)->height; y++) {
+			colordata.bayer.assignvalue(bayer,
+	 					    (uint16_t)((read_data[x * (*bayer)->width + y]) << 16) + (uint16_t)(read_data[x * (*bayer)->width + y + 1]),
+	 					    x / 2,
+	 					    y / 2);
+		}
+	}
+	return 0;
+}
+
 static inline uint32_t ascii_str2uint32(uint8_t *string)
 {
 	size_t string_size = 0;
@@ -127,31 +148,43 @@ int ppm_read2bayer(colordata_bayer_t **bayer,
 	}
 	max_color_lvl_buf = (uint8_t*)sbrk(-max_color_lvl_buf_size * sizeof(uint8_t));
 	if(header_size + (size_t)(image_height * image_width) * 6 != file_size) {
-		read_buf = (uint8_t*)sbrk(-file_size * sizeof(uint8_t));
+		read_buf = (uint8_t*)sbrk(-(size_t)file_size * sizeof(uint8_t));
 		return -1;
 	}
-	(*bayer) = colordata.bayer.create(image_height, image_width, -1);
-	if(!(*bayer)) {
-		read_buf = (uint8_t*)sbrk(-file_size * sizeof(uint8_t));
+	/* *bayer = colordata.bayer.create(image_height, image_width, -1); */
+	/* if(!*bayer) { */
+	/* 	read_buf = (uint8_t*)sbrk(-file_size * sizeof(uint8_t)); */
+	/* 	return -1; */
+	/* } */
+	/* for(uint32_t x = 0; x < (*bayer)->height; x += 2) { */
+	/* 	for(uint32_t y = 0; y < (*bayer)->width * 2; y += 2) { */
+	/* 		colordata.bayer.assignvalue(bayer, */
+	/* 					    (uint16_t)((read_buf[x * (*bayer)->width + y + header_size]) << 16) + (uint16_t)(read_buf[x * (*bayer)->width + y + header_size + 1]), */
+	/* 					    x / 2, */
+	/* 					    y / 2); */
+	/* 	} */
+	/* } */
+	/* printf(" => %d %d\n", (*bayer)->height, (*bayer)->width); */
+	/* read_buf = (uint8_t*)sbrk(-(size_t)file_size * sizeof(uint8_t)); */
+	
+	if(bayer_read_hdlr(bayer, (uint8_t*)(read_buf + height_buf_size), image_height, image_width)) {
+		read_buf = (uint8_t*)sbrk(-(size_t)file_size * sizeof(uint8_t));
 		return -1;
 	}
-	*bayer = (colordata_bayer_t*)((uint8_t*)(*bayer) + sizeof(colordata_bayer_t));
-	for(uint32_t x = 0; x < (*bayer)->height; x += 2) {
-		for(uint32_t y = 0; y < (*bayer)->width * 2; y += 2) {
-			colordata.bayer.assignvalue(bayer,
-						    (uint16_t)((read_buf[x * (*bayer)->width + y + header_size]) << 16) + (uint16_t)(read_buf[x * (*bayer)->width + y + header_size + 1]),
-						    x / 2,
-						    y / 2);
-		}
-	}
-	printf(" => %d %d\n", (*bayer)->height, (*bayer)->width);
 	read_buf = (uint8_t*)sbrk(-(size_t)file_size * sizeof(uint8_t));
 	return 0;
 }
 
-void test(colordata_bayer_t **bayer) {
-	*bayer = colordata.bayer.create(10, 10, -1);
+void test(colordata_bayer_t **bayer,
+          uint32_t            height,
+          uint32_t            width) {
+	*bayer = colordata.bayer.create(height, width, -1);
 	printf(" => %d %d\n", (*bayer)->height, (*bayer)->width);
+	for(size_t x = 0; x < (*bayer)->height; x++) {
+		for(size_t y = 0; y < (*bayer)->height; y++) {
+			colordata.bayer.assignvalue(bayer, x * y, x, y);
+		}
+	}
 }
 
 /* int ppm_writebayer(colordata_bayer_t *bayer, */

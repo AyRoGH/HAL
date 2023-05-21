@@ -13,6 +13,7 @@ out/main: main.c
 
 outdir:
 	mkdir out
+	cp /home/ayro/Airi/HAL/ppm/1684423638536.ppm out
 
 clean:
 	rm -rf out/*.so out/main out

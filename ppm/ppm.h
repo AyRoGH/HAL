@@ -6,7 +6,7 @@
 
 typedef struct {
         int (*read2bayer)(colordata_bayer_t **bayer, char *path);
-        void (*test)(colordata_bayer_t **bayer);
+        void (*test)(colordata_bayer_t **bayer, uint32_t height, uint32_t width);
 } ppm_functions_t;
 
 extern ppm_functions_t ppm;
