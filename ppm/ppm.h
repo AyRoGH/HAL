@@ -5,8 +5,8 @@
 #define __PPM_H__
 
 typedef struct {
-        int (*read2bayer)(colordata_bayer_t **bayer, char *path);
-        void (*test)(colordata_bayer_t **bayer, uint32_t height, uint32_t width);
+        int (*bayer_read)(colordata_bayer_t **bayer, char *path);
+        int (*bayer_write)(colordata_bayer_t **bayer, char *path);
 } ppm_functions_t;
 
 extern ppm_functions_t ppm;
